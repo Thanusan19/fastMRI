@@ -19,6 +19,8 @@ import numpy as np
 import torch
 import yaml
 
+from fastmri.data.subsample import RandomMaskFunc
+
 
 def et_query(
     root: etree.Element,
@@ -345,9 +347,25 @@ class SliceDataset(torch.utils.data.Dataset):
         with h5py.File(fname, "r") as hf:
             kspace = hf["kspace"][dataslice]
 
+######################################################
+
+            mask_func = RandomMaskFunc(center_fractions=[0.04], accelerations=[8])  # Create the mask function object
+            masked_kspace, mask = T.apply_mask(T.to_tensor(kspace), mask_func)   # Apply the mask to k-space
+            loss_masked_kspace = masked_kspace
+            print("kspace shape  : ", kspace.shape)
+            print("loss_masked_kspace shape : ", loss_masked_kspace)
+            trn_masked_kspace = kspace - loss_masked_kspace
+
+######################################################
+
             mask = np.asarray(hf["mask"]) if "mask" in hf else None
 
             target = hf[self.recons_key][dataslice] if self.recons_key in hf else None
+
+######################################################
+            kspace = trn_masked_kspace
+            target = loss_masked_kspace
+######################################################
 
             attrs = dict(hf.attrs)
             attrs.update(metadata)
