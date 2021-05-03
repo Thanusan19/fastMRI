@@ -20,6 +20,8 @@ import torch
 import yaml
 
 from fastmri.data.subsample import RandomMaskFunc
+from fastmri.data import transforms as T
+import fastmri
 
 
 def et_query(
@@ -351,9 +353,9 @@ class SliceDataset(torch.utils.data.Dataset):
 
             mask_func = RandomMaskFunc(center_fractions=[0.04], accelerations=[8])  # Create the mask function object
             masked_kspace, mask = T.apply_mask(T.to_tensor(kspace), mask_func)   # Apply the mask to k-space
-            loss_masked_kspace = masked_kspace
-            print("kspace shape  : ", kspace.shape)
-            print("loss_masked_kspace shape : ", loss_masked_kspace)
+            loss_masked_kspace = masked_kspace[:,:,0].numpy()
+            #print("kspace shape  : ", kspace.shape)
+            #print("loss_masked_kspace shape : ", loss_masked_kspace.shape)
             trn_masked_kspace = kspace - loss_masked_kspace
 
 ######################################################
